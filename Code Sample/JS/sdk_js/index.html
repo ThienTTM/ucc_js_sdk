@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Video Call Sample</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <link
+            href="https://fonts.googleapis.com/css?family=Nunito:300,300i,400,400i,600,600i,700,700i&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+            integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+            crossorigin="anonymous"
+        />
+        <script
+            src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"
+        ></script>
+        <script src="https://meet.jit.si/external_api.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"
+            integrity="sha512-iKDtgDyTHjAitUDdLljGhenhPwrbBfqTKWO1mkhSFH3A7blITC9MhYon6SjnMhp4o0rADGw9yAC6EW4t5a4K3g=="
+            crossorigin="anonymous"
+        ></script>
+    </head>
+    <body>
+        <script type="text/javascript" src="VideoCall.js"></script>
+        <script type="text/javascript" src="device-uuid.js"></script>
+        <script type="text/javascript" src="style-caller.scss"></script>
+        <div>
+            <link
+                href="https://fonts.googleapis.com/css?family=Nunito:300,300i,400,400i,600,600i,700,700i&display=swap"
+                rel="stylesheet"
+            />
+            <link
+                href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined"
+                rel="stylesheet"
+            />
+            <span class="ml-2">Video call sample (version 2.0.7)</span>
+            <div class="spacer"></div>
+            <button
+                class="btn btn-success d-inline-flex mr-2"
+                id="user"
+                onclick="createUUID()"
+            >
+                Tạo UUID (nếu lần đầu mở app)
+            </button>
+            <button
+                class="btn btn-success d-inline-flex mr-2"
+                id="admin"
+                onclick="loginAs('admin')"
+            >
+                Bước 3: Register device (admin)
+            </button>
+
+            <button
+                class="btn btn-warning d-inline-flex mr-2"
+                id="user"
+                onclick="logout()"
+            >
+                Logout
+            </button>
+        </div>
+
+        <div class="content" role="main">
+            <div class="col-12 container-fluid">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <div class="row mb-2">
+                            <div class="col-8">
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="uuidAdmin"
+                                />
+                            </div>
+                            <div class="col-4">
+                                <button
+                                    type="button"
+                                    class="btn btn-success"
+                                    onclick="setUUID('admin')"
+                                >
+                                    Bước 1: Thiết lập UUID nguồn (có thể có hoặc
+                                    không)
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-8">
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="uuidUser"
+                                />
+                            </div>
+                            <div class="col-4">
+                                <button
+                                    type="button"
+                                    class="btn btn-success"
+                                    onclick="setUUID('user')"
+                                >
+                                    Bước 2: Thiết lập UUID đích (user)
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-8">
+                                <p class="pt-2" id="uuidUserText"></p>
+                            </div>
+                            <div class="col-4">
+                                <button
+                                    type="button"
+                                    class="btn btn-success"
+                                    onclick="callVideo()"
+                                >
+                                    Bước 4: Gọi tới user đích
+                                </button>
+                            </div>
+                        </div>
+                    </li>
+
+                    <button
+                        type="button"
+                        class="btn btn-success"
+                        onclick="getFile()"
+                    >
+                        Get file
+                    </button>
+                    <iframe
+                        class="home__hero__video"
+                        id="urlVideo"
+                        webkitallowfullscreen
+                        mozallowfullscreen
+                        allowfullscreen
+                        height="500"
+                    >
+                    </iframe>
+                </ul>
+            </div>
+        </div>
+
+        <div id="meet"></div>
+
+        <script>
+            // Khai báo biến cần thiết
+            var VideoCallSDK = VideoCall();
+            const uuidAdmin = localStorage.getItem('uuidAdmin')
+                ? localStorage.getItem('uuidAdmin').replace(/"/g, '')
+                : VideoCallSDK.createUUID();
+            const uuidUser = localStorage.getItem('uuidUser')
+                ? localStorage.getItem('uuidUser').replace(/"/g, '')
+                : VideoCallSDK.createUUID();
+
+            const ConfigVideoCall = {
+                token_id: '6af3add6-4023-4185-abfe-17b6aaa16b0f',
+                token_key:
+                    'MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAJA5XkrWo36Y/WLmRD1z79TEKxcDzR/A25o9fqydnxJcvv2lWQLjOuyJaFhyP13TwDWOaRE61VSgZgKKfEuQP5kCAwEAAQ==',
+                client_id: 'videocall',
+                client_secret: 'password',
+            };
+            let client;
+            document.getElementById('uuidAdmin').value = uuidAdmin;
+            document.getElementById('uuidUser').value = uuidUser;
+            document.getElementById('uuidUserText').innerHTML = uuidUser;
+
+            // thực hiện gọi hàm connect khi vừa vào trang dùng để thực hiện video call
+            _connect();
+
+            //hàm connect socket
+            function _connect() {
+                var ws = new WebSocket(
+                    'wss://api.idg.vnpt.vn/router-service/websocket'
+                );
+                client = Stomp.over(ws);
+                client.connect(
+                    {},
+                    function (frame) {
+                        client.subscribe(
+                            '/topic/' +
+                                VideoCallSDK.getTopicUsing(
+                                    uuidAdmin,
+                                    ConfigVideoCall
+                                ),
+                            function (sdkEvent) {
+                                onMessageReceived(sdkEvent);
+                            }
+                        );
+                    },
+                    (e) => {
+                        errorCallBack(e);
+                    }
+                );
+            }
+
+            //disconnect socket khi rời khởi trang dùng để gọi
+            function _disconnect() {
+                if (client !== null) {
+                    client.disconnect();
+                }
+                console.log('Disconnected');
+            }
+
+            //request lại socket khi expired
+            function errorCallBack(error) {
+                console.log('errorCallBack -> ' + error);
+                _connect();
+            }
+
+            //hàm thực hiện xóa device khi logout
+            function logout() {
+                VideoCallSDK.removeDevice(uuidAdmin, ConfigVideoCall);
+            }
+
+            function createUUID() {
+                VideoCallSDK.createUUID();
+            }
+
+            function setUUID(type) {
+                const uuidAdminValue = document.getElementById('uuidAdmin')
+                    .value;
+                const uuidUserValue = document.getElementById('uuidUser').value;
+                document.getElementById(
+                    'uuidUserText'
+                ).innerHTML = uuidUserValue;
+                if (type === 'admin') {
+                    alert(uuidAdminValue);
+                    localStorage.setItem(
+                        'uuidAdmin',
+                        JSON.stringify(uuidAdminValue)
+                    );
+                    alert(uuidAdminValue);
+                } else {
+                    alert(uuidUserValue);
+                    localStorage.setItem(
+                        'uuidUser',
+                        JSON.stringify(uuidUserValue)
+                    );
+                }
+            }
+
+            //gọi video
+            async function callVideo() {
+                const receiverCallers = [
+                    localStorage.getItem('uuidUser').replace(/"/g, ''),
+                ];
+                const res = await VideoCallSDK.createCall(
+                    uuidAdmin,
+                    'admin',
+                    receiverCallers,
+                    ConfigVideoCall
+                );
+                console.log('call', res);
+            }
+
+            //xử lý message khi socket bắn về
+            function onMessageReceived(message) {
+                const mess = JSON.parse(message.body);
+                handleMessage(JSON.stringify(message.body));
+            }
+
+            async function getFile() {
+                const url = document.getElementById('urlVideo');
+                const res = await VideoCallSDK.getFile(null, ConfigVideoCall);
+                if (res.object) {
+                    url.src = res.object.url;
+                }
+                console.log('getFile', res);
+            }
+
+            function handleMessage(message) {
+                const mess = JSON.parse(message);
+                console.log('message', JSON.parse(mess));
+                VideoCallSDK.handleReceivingMessage(
+                    uuidAdmin,
+                    JSON.parse(mess),
+                    ConfigVideoCall
+                );
+            }
+
+            function loginAs(role) {
+                alert('login as ' + role);
+                console.log(VideoCallSDK.getUUID());
+                if (role === 'admin') {
+                    VideoCallSDK.registerDevice(
+                        uuidAdmin, // token
+                        uuidAdmin,
+                        ConfigVideoCall,
+                        'admin'
+                    );
+                }
+            }
+        </script>
+    </body>
+</html>

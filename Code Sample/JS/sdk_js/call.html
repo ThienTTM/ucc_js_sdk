@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Econtract</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <link
+            href="https://fonts.googleapis.com/css?family=Nunito:300,300i,400,400i,600,600i,700,700i&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+            integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+            crossorigin="anonymous"
+        />
+        <script
+            src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"
+        ></script>
+        <script src="https://meet.jit.si/external_api.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"
+            integrity="sha512-iKDtgDyTHjAitUDdLljGhenhPwrbBfqTKWO1mkhSFH3A7blITC9MhYon6SjnMhp4o0rADGw9yAC6EW4t5a4K3g=="
+            crossorigin="anonymous"
+        ></script>
+    </head>
+    <body>
+        <script type="text/javascript" src="VideoCall.js"></script>
+        <script type="text/javascript" src="style-caller.scss"></script>
+
+        <div id="meet"></div>
+        <script>
+            const ConfigVideoCall = {
+                token_id: '6af3add6-4023-4185-abfe-17b6aaa16b0f',
+                token_key:
+                    'MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAJA5XkrWo36Y/WLmRD1z79TEKxcDzR/A25o9fqydnxJcvv2lWQLjOuyJaFhyP13TwDWOaRE61VSgZgKKfEuQP5kCAwEAAQ==',
+                client_id: 'videocall',
+                client_secret: 'password',
+            };
+            const uuidAdmin = '5250d256-24a7-4511-949d-90063ec4b869';
+            var VideoCallSDK = VideoCall();
+            let roomInfo;
+            try {
+                roomInfo = JSON.parse(localStorage.getItem('roomInfo'));
+            } catch (error) {
+                console.log(error);
+            }
+            console.log('room info', roomInfo);
+            const options = {
+                roomName: roomInfo['roomId'] ? roomInfo['roomId'] : '',
+                width: '100%',
+                height: 590,
+                jwt: roomInfo['token'],
+                configOverwrite: { subject: ' ' }, // set roomName
+                userInfo: {
+                    displayName: roomInfo['caller'],
+                    email: VideoCallSDK.getUUID(),
+                },
+                parentNode: document.querySelector('#meet'),
+            };
+            let api = new window.JitsiMeetExternalAPI(
+                roomInfo['domain'].replace('https://', ''),
+                options
+            );
+            console.log(options);
+            api.addEventListener('readyToClose', async () => {
+                try {
+                    const res = VideoCallSDK.endCall(
+                        localStorage.getItem('uuidAdmin').replace(/"/g, ''),
+                        ConfigVideoCall
+                    );
+                    window.open('', '_self').close();
+                    console.log(res);
+                    if (res.message === 'IDG-00000000') {
+                        window.open('', '_self').close();
+                    }
+                } catch (error) {}
+            });
+        </script>
+    </body>
+</html>
